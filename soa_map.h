@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 André Tupinambá (andrelrt@gmail.com)
+ * Copyright (c) 2015 André Tupinambá (andrelrt@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
 #define CCPPBRASIL_SOAMAP_H
 
 #include <vector>
-#include <boost/counting_iterator.h>
+#include <boost/iterator/counting_iterator.hpp>
 
 namespace ccppbrasil {
 
@@ -41,7 +41,8 @@ template< class KeyType,
 		  class ValueAllocator >
 class soa_iterator : public boost::counting_iterator<size_t>
 {
-    typedef soa_map< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, class ValueAllocator > value_type;
+public:
+    typedef soa_map< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > value_type;
     
     soa_iterator( value_type& obj, size_t pos );
     
@@ -61,7 +62,7 @@ class soa_iterator : public boost::counting_iterator<size_t>
     
 private:
     value_type& soa_map_;
-}
+};
 
 template< class KeyType,
 		  class ValueType,
@@ -70,6 +71,7 @@ template< class KeyType,
 		  class ValueAllocator >
 class soa_map
 {
+public:
    	typedef soa_iterator<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >            iterator;
    	typedef const soa_iterator<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >      const_iterator;
 
@@ -80,8 +82,7 @@ class soa_map
 
 	std::pair< iterator, bool > insert( const std::pair< KeyType, ValueType > &keyValuePair );
 
-	template<class K, class V> 
-    std::pair< iterator, bool > emplace( K && _key, V && value );
+    std::pair< iterator, bool > emplace( KeyType && _key, ValueType && value );
 
 	iterator erase( const KeyType &key );
 
@@ -116,7 +117,7 @@ private:
     typedef std::vector< KeyType, KeyAllocator > key_container_type;
     typedef std::vector< ValueType, ValueAllocator > value_container_type;
 
-    friend class soa_iterator<KeyType, ValueType, Compare, KeyAllocator, ValueAllocator >;
+    friend class soa_iterator<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >;
     
     key_container_type key_container_;
     value_container_type value_container_;
@@ -124,6 +125,6 @@ private:
 
 }
 
-#include "soaMap-impl.h"
+#include "soa_map-impl.h"
 
 #endif // CCPPBRASIL_SOAMAP_H
