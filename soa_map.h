@@ -35,6 +35,33 @@ template< class KeyType,
 class soa_map;
 
 template< class KeyType,
+          class ValueType,
+          class KeyCompare,
+          class KeyAllocator,
+          class ValueAllocator >
+class soa_pair
+{
+public:
+    typedef soa_pair< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > my_type;
+    typedef soa_map< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > value_type;
+
+    soa_pair( value_type& obj, size_t pos );
+    soa_pair( soa_pair& other ) = default;
+    soa_pair( soa_pair&& other ) = default;
+    my_type& operator=( soa_pair&& other ) = default;
+    bool operator<( const my_type& other ) const;
+
+    const KeyType& key() const;
+
+    ValueType& value();
+    const ValueType& value() const;
+
+private:
+    value_type& soa_map_;
+    size_t pos_;
+};
+
+template< class KeyType,
 		  class ValueType,
 		  class KeyCompare,
 		  class KeyAllocator,
@@ -43,22 +70,25 @@ class soa_iterator : public boost::counting_iterator<size_t>
 {
 public:
     typedef soa_map< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > value_type;
-    
+    typedef soa_pair< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > ref_type;
+
     soa_iterator( value_type& obj, size_t pos );
-    
+    soa_iterator( soa_iterator& other ) = default;
+    soa_iterator& operator=( soa_iterator& other ) = default;
+    soa_iterator& operator=( soa_iterator&& other ) = default;
+
     void swap( soa_iterator& other );
     
-    KeyType& key();
     const KeyType& key() const;
 
     ValueType& value();
     const ValueType& value() const;
-    
-    std::pair< KeyType&, ValueType& > operator*();
-    std::pair< const KeyType&, const ValueType& > operator*() const;
 
-    std::pair< KeyType&, ValueType& > operator->();
-    std::pair< const KeyType&, const ValueType& > operator->() const;
+    ref_type operator*();
+    ref_type operator*() const;
+
+    ref_type operator->();
+    ref_type operator->() const;
     
 private:
     value_type& soa_map_;
@@ -80,9 +110,9 @@ public:
 	bool empty() const;
 	void clear();
 
-	std::pair< iterator, bool > insert( const std::pair< KeyType, ValueType > &keyValuePair );
+	bool insert( const std::pair< KeyType, ValueType > &keyValuePair );
 
-    std::pair< iterator, bool > emplace( KeyType && _key, ValueType && value );
+    bool emplace( KeyType && moveKey, ValueType && value );
 
 	iterator erase( const KeyType &key );
 
@@ -118,10 +148,21 @@ private:
     typedef std::vector< ValueType, ValueAllocator > value_container_type;
 
     friend class soa_iterator<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >;
+
+    void sort() const;
     
+    bool dirty_ = false;
     key_container_type key_container_;
     value_container_type value_container_;
 };
+
+}
+
+namespace std {
+
+template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, class ValueAllocator >
+void swap( ::ccppbrasil::soa_pair< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >& lhs,
+           ::ccppbrasil::soa_pair< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >& rhs );
 
 }
 

@@ -27,30 +27,84 @@
 
 #include "soa_map.h"
 
-template< template< class... > class MapType, typename K = size_t, typename V = size_t >
-MapType<K, V> fillMap( size_t size )
+template< class MapType >
+void forwardFill( MapType& ret_map, size_t size )
 {
-    MapType<K, V> ret_map;
-
-    for( size_t i = 0; i < 1'000'000'000; ++i )
+    for( size_t i = 0; i < size; ++i )
     {
-        ret_map[ 1'000'000'000 - i ] = i;
+        ret_map.insert( std::make_pair( i, i ) );
     }
+}
 
-    return ret_map;
+template< class MapType >
+void reverseFill( MapType& ret_map, size_t size )
+{
+    for( size_t i = 0; i < size; ++i )
+    {
+        ret_map.insert( std::make_pair( size - i, i ) );
+    }
 }
 
 int main(int argc, char* argv[])
 {
     boost::timer::cpu_timer timer;
 
+    size_t size = 100'000;
+
+
+    // std::map
+    std::map<size_t, size_t> std_map1;
     timer.start();
-    auto soa = fillMap< ccppbrasil::soa_map >( 1'000'000'000 );
+    forwardFill( std_map1, size );
     timer.stop();
+    std::cout << "forward std::map: " << timer.format() << std::endl;
 
-    std::cout << "ccppbrasil::soa_map: " << timer.format() << std::endl;
+    std::map<size_t, size_t> std_map2;
+    timer.start();
+    reverseFill( std_map2, size );
+    timer.stop();
+    std::cout << "reverse std::map: " << timer.format() << std::endl;
 
 
+    // boost::container::flat_map
+    boost::container::flat_map<size_t, size_t> flat_map1;
+    flat_map1.reserve( size );
+    timer.start();
+    forwardFill( flat_map1, size );
+    timer.stop();
+    std::cout << "forward boost::container::flat_map: " << timer.format() << std::endl;
+
+    boost::container::flat_map<size_t, size_t> flat_map2;
+    flat_map2.reserve( size );
+    timer.start();
+    reverseFill( flat_map2, size );
+    timer.stop();
+    std::cout << "reverse boost::container::flat_map: " << timer.format() << std::endl;
+
+    // ccppbrasil::soa_map
+    ccppbrasil::soa_map<size_t, size_t> soa_map1;
+    soa_map1.reserve( size );
+    timer.start();
+    forwardFill( soa_map1, size );
+    timer.stop();
+    std::cout << "forward ccppbrasil::soa_map: " << timer.format() << std::endl;
+
+    ccppbrasil::soa_map<size_t, size_t> soa_map2;
+    soa_map2.reserve( size );
+    timer.start();
+    reverseFill( soa_map2, size );
+    timer.stop();
+    std::cout << "reverse ccppbrasil::soa_map: " << timer.format() << std::endl;
+
+
+    ccppbrasil::soa_map<size_t, size_t> soa_map_test;
+    soa_map_test.reserve( 100 );
+    reverseFill( soa_map_test, 100 );
+    for( auto& pt : soa_map_test )
+    {
+        std::cout << "(" << pt.key() << "," << pt.value() << ")-";
+    }
+    
 	return 0;
 }
 
