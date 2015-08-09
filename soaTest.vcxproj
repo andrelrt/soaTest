@@ -155,10 +155,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="XY.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="soa_map-impl.h" />
     <ClInclude Include="soa_map.h" />
+    <ClInclude Include="XY.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
