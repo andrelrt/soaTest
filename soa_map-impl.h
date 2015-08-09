@@ -167,15 +167,14 @@ void soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::cle
 template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, class ValueAllocator >
 bool soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::insert( const std::pair< KeyType, ValueType > &keyValuePair )
 {
-    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = find( keyValuePair.first );
+    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = lower_bound( keyValuePair.first );
 
-    if( end() != pos )
+    if( end() != pos && keyValuePair.first == pos.key() )
     {
         return false;
     }
 
     size_t idx = pos.base();
-
     auto keyPos = key_container_.begin();
     std::advance( keyPos, idx );
     key_container_.insert( keyPos, keyValuePair.first );
@@ -192,18 +191,17 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 bool soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::emplace( KeyType && refKey, ValueType && value )
 {
     KeyType key( std::forward<KeyType>(refKey) );
-    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = find( key );
+    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = lower_bound( key );
 
-    if( end() != pos )
+    if( end() != pos && key == pos.key() )
     {
         return false;
     }
 
     size_t idx = pos.base();
-
     auto keyPos = key_container_.begin();
     std::advance( keyPos, idx );
-    key_container_.insert( keyPos, keyValuePair.first );
+    key_container_.insert( keyPos, key );
 
     auto valPos = value_container_.begin();
     std::advance( valPos, idx );

@@ -45,6 +45,108 @@ void reverseFill( MapType& ret_map, size_t size )
     }
 }
 
+void least_square_aos()
+{
+    struct XY
+    {
+        float x;
+        float y;
+    };
+
+    std::vector< XY > xy;
+
+    srand( static_cast<unsigned>( time(NULL) ) );
+
+    size_t size = 500'000'000;
+    xy.reserve( size );
+    for( size_t i = 0; i < size; ++i )
+    {
+        xy.push_back( { i + ( 2.f * rand() - RAND_MAX / 2.f ) / RAND_MAX ,
+                        i + ( 4.f * rand() - RAND_MAX / 2.f ) / RAND_MAX } );
+    }
+
+    boost::timer::cpu_timer timer;
+
+    timer.start();
+    float meanx = 0;
+    float meany = 0;
+    for( size_t i = 0; i < size; ++i )
+    {
+        meanx += xy[ i ].x;
+        meany += xy[ i ].y;
+    }
+
+    meanx /= size;
+    meany /= size;
+
+    float numerator = 0;
+    float denominator = 0;
+    for( size_t i = 0; i < size; ++i )
+    {
+        float diffx = ( xy[ i ].x - meanx );
+        numerator += diffx * ( xy[ i ].y - meany );
+        denominator += diffx * diffx;
+    }
+
+    float b = numerator / denominator;
+    float a = meany - b * meanx;
+    timer.stop();
+
+    std::cout << "Least Square linear regression aos: y = " << a << " + " << b << "x + e : "
+              << timer.format();
+
+}
+
+
+void least_square_soa()
+{
+    std::vector< float > x;
+    std::vector< float > y;
+
+    srand( static_cast<unsigned>( time( NULL ) ) );
+
+    size_t size = 500'000'000;
+    x.reserve( size );
+    y.reserve( size );
+    for( size_t i = 0; i < size; ++i )
+    {
+        x.push_back( i + ( 2.f * rand() - RAND_MAX / 2.f ) / RAND_MAX );
+        y.push_back( i + ( 4.f * rand() - RAND_MAX / 2.f ) / RAND_MAX );
+    }
+
+    boost::timer::cpu_timer timer;
+
+    timer.start();
+    float meanx = 0;
+    float meany = 0;
+    for( size_t i = 0; i < size; ++i )
+    {
+        meanx += x[i];
+        meany += y[i];
+    }
+
+    meanx /= size;
+    meany /= size;
+
+    float numerator = 0;
+    float denominator = 0;
+    for( size_t i = 0; i < size; ++i )
+    {
+        float diffx = ( x[i] - meanx );
+        numerator += diffx * ( y[i] - meany );
+        denominator += diffx * diffx;
+    }
+
+    float b = numerator / denominator;
+    float a = meany - b * meanx;
+    timer.stop();
+
+    std::cout << "Least Square linear regression soa: y = " << a << " + " << b << "x + e : "
+        << timer.format();
+
+}
+
+
 int main(int argc, char* argv[])
 {
     boost::timer::cpu_timer timer;
@@ -53,58 +155,64 @@ int main(int argc, char* argv[])
 
 
     // std::map
-    std::map<size_t, size_t> std_map1;
-    timer.start();
-    forwardFill( std_map1, size );
-    timer.stop();
-    std::cout << "forward std::map: " << timer.format() << std::endl;
+    {
+        std::map<size_t, size_t> std_map1;
+        timer.start();
+        forwardFill( std_map1, size );
+        timer.stop();
+        std::cout << "forward std::map: " << timer.format();
+    }
 
-    std::map<size_t, size_t> std_map2;
-    timer.start();
-    reverseFill( std_map2, size );
-    timer.stop();
-    std::cout << "reverse std::map: " << timer.format() << std::endl;
+    {
+        std::map<size_t, size_t> std_map2;
+        timer.start();
+        reverseFill( std_map2, size );
+        timer.stop();
+        std::cout << "reverse std::map: " << timer.format();
+    }
 
 
     // boost::container::flat_map
-    boost::container::flat_map<size_t, size_t> flat_map1;
-    flat_map1.reserve( size );
-    timer.start();
-    forwardFill( flat_map1, size );
-    timer.stop();
-    std::cout << "forward boost::container::flat_map: " << timer.format() << std::endl;
+    {
+        boost::container::flat_map<size_t, size_t> flat_map1;
+        flat_map1.reserve( size );
+        timer.start();
+        forwardFill( flat_map1, size );
+        timer.stop();
+        std::cout << "forward boost::container::flat_map: " << timer.format();
+    }
 
-    boost::container::flat_map<size_t, size_t> flat_map2;
-    flat_map2.reserve( size );
-    timer.start();
-    reverseFill( flat_map2, size );
-    timer.stop();
-    std::cout << "reverse boost::container::flat_map: " << timer.format() << std::endl;
+    {
+        boost::container::flat_map<size_t, size_t> flat_map2;
+        flat_map2.reserve( size );
+        timer.start();
+        reverseFill( flat_map2, size );
+        timer.stop();
+        std::cout << "reverse boost::container::flat_map: " << timer.format();
+    }
 
     // ccppbrasil::soa_map
-    ccppbrasil::soa_map<size_t, size_t> soa_map1;
-    soa_map1.reserve( size );
-    timer.start();
-    forwardFill( soa_map1, size );
-    timer.stop();
-    std::cout << "forward ccppbrasil::soa_map: " << timer.format() << std::endl;
-
-    ccppbrasil::soa_map<size_t, size_t> soa_map2;
-    soa_map2.reserve( size );
-    timer.start();
-    reverseFill( soa_map2, size );
-    timer.stop();
-    std::cout << "reverse ccppbrasil::soa_map: " << timer.format() << std::endl;
-
-
-    ccppbrasil::soa_map<size_t, size_t> soa_map_test;
-    soa_map_test.reserve( 100 );
-    reverseFill( soa_map_test, 100 );
-    for( auto& pt : soa_map_test )
     {
-        std::cout << "(" << pt.key() << "," << pt.value() << ")-";
+        ccppbrasil::soa_map<size_t, size_t> soa_map1;
+        soa_map1.reserve( size );
+        timer.start();
+        forwardFill( soa_map1, size );
+        timer.stop();
+        std::cout << "forward ccppbrasil::soa_map: " << timer.format();
     }
-    
-	return 0;
+
+    {
+        ccppbrasil::soa_map<size_t, size_t> soa_map2;
+        soa_map2.reserve( size );
+        timer.start();
+        reverseFill( soa_map2, size );
+        timer.stop();
+        std::cout << "reverse ccppbrasil::soa_map: " << timer.format();
+    }
+
+
+    least_square_aos();
+    least_square_soa();
+    return 0;
 }
 
