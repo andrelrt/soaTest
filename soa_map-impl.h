@@ -167,15 +167,14 @@ void soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::cle
 template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, class ValueAllocator >
 bool soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::insert( const std::pair< KeyType, ValueType > &keyValuePair )
 {
-    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = find( keyValuePair.first );
+    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = lower_bound( keyValuePair.first );
 
-    if( end() != pos )
+    if( end() != pos && keyValuePair.first == pos.key() )
     {
         return false;
     }
 
     size_t idx = pos.base();
-
     auto keyPos = key_container_.begin();
     std::advance( keyPos, idx );
     key_container_.insert( keyPos, keyValuePair.first );
@@ -192,18 +191,17 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 bool soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::emplace( KeyType && refKey, ValueType && value )
 {
     KeyType key( std::forward<KeyType>(refKey) );
-    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = find( key );
+    typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator pos = lower_bound( key );
 
-    if( end() != pos )
+    if( end() != pos && key == pos.key() )
     {
         return false;
     }
 
     size_t idx = pos.base();
-
     auto keyPos = key_container_.begin();
     std::advance( keyPos, idx );
-    key_container_.insert( keyPos, keyValuePair.first );
+    key_container_.insert( keyPos, key );
 
     auto valPos = value_container_.begin();
     std::advance( valPos, idx );
@@ -306,7 +304,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::begin()
 {
-    sort();
     return iterator( *this, 0 );
 }
 
@@ -315,7 +312,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 const typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::const_iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::begin() const
 {
-    sort();
     return const_iterator( *this, 0 );
 }
 
@@ -324,7 +320,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::end()
 {
-    sort();
     return iterator( *this, size() );
 }
 
@@ -333,7 +328,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 const typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::const_iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::end() const
 {
-    sort();
     return const_iterator( *this, size() );
 }
 
@@ -342,7 +336,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::lower_bound( const KeyType &key )
 {
-    sort();
     auto pos = std::lower_bound( key_container_.begin(), key_container_.end(), key, KeyCompare() );
     if( key_container_.end() != pos )
     {
@@ -357,7 +350,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 const typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::const_iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::lower_bound( const KeyType &key ) const
 {
-    sort();
     auto pos = std::lower_bound( key_container_.begin(), key_container_.end(), key, KeyCompare() );
     if( key_container_.end() != pos )
     {
@@ -372,7 +364,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::upper_bound( const KeyType &key )
 {
-    sort();
     auto pos = std::upper_bound( key_container_.begin(), key_container_.end(), key, KeyCompare() );
     if( key_container_.end() != pos )
     {
@@ -387,7 +378,6 @@ template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, 
 const typename soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::const_iterator
 soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::upper_bound( const KeyType &key ) const
 {
-    sort();
     auto pos = std::upper_bound( key_container_.begin(), key_container_.end(), key, KeyCompare() );
     if( key_container_.end() != pos )
     {
@@ -421,19 +411,6 @@ soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::find( co
         return pos;
     }
     return end();
-}
-
-//-------------------------------------------------------------------------------------------------
-template< class KeyType, class ValueType, class KeyCompare, class KeyAllocator, class ValueAllocator >
-void soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >::sort() const
-{
-    if( dirty_ )
-    {
-        auto myThis = const_cast<soa_map<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >*>( this );
-
-        //std::sort( myThis->begin(), myThis->end() );
-        myThis->dirty_ = false;
-    }
 }
 
 } //namespace ccppbrasil

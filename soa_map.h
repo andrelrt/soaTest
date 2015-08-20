@@ -7,10 +7,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,9 +46,9 @@ public:
     typedef soa_map< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > value_type;
 
     soa_pair( value_type& obj, size_t pos );
-    soa_pair( soa_pair& other ) = default;
-    soa_pair( soa_pair&& other ) = default;
-    my_type& operator=( soa_pair&& other ) = default;
+    soa_pair( const soa_pair& other ) = default;
+    soa_pair( soa_pair&& other );
+    my_type& operator=( soa_pair&& other );
     bool operator<( const my_type& other ) const;
 
     const KeyType& key() const;
@@ -73,12 +73,12 @@ public:
     typedef soa_pair< KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator > ref_type;
 
     soa_iterator( value_type& obj, size_t pos );
-    soa_iterator( soa_iterator& other ) = default;
-    soa_iterator& operator=( soa_iterator& other ) = default;
-    soa_iterator& operator=( soa_iterator&& other ) = default;
+    soa_iterator( const soa_iterator& other ) = default;
+    soa_iterator& operator=( const soa_iterator& other ) = default;
+    soa_iterator& operator=( soa_iterator&& other );
 
     void swap( soa_iterator& other );
-    
+
     const KeyType& key() const;
 
     ValueType& value();
@@ -89,7 +89,7 @@ public:
 
     ref_type operator->();
     ref_type operator->() const;
-    
+
 private:
     value_type& soa_map_;
 };
@@ -142,16 +142,13 @@ public:
 
 	iterator find( const KeyType &key );
 	const_iterator find( const KeyType &key ) const;
-    
+
 private:
     typedef std::vector< KeyType, KeyAllocator > key_container_type;
     typedef std::vector< ValueType, ValueAllocator > value_container_type;
 
     friend class soa_iterator<KeyType, ValueType, KeyCompare, KeyAllocator, ValueAllocator >;
 
-    void sort() const;
-    
-    bool dirty_ = false;
     key_container_type key_container_;
     value_container_type value_container_;
 };
